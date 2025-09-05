@@ -4,6 +4,19 @@ on:
   # schedule:
     # - cron: "0 9 * * 1"
   workflow_dispatch:
+    inputs:
+      repo_list:
+        description: 'Repositories'
+        required: true
+        default: |
+          alexauron/astro-tutorial
+          alexauron/Head-First-Design-Patterns
+
+      assignees:
+        description: 'Assignees'
+        required: false
+        default: |
+          alexauron
 
 jobs:
   create-vulnerability-issues:
@@ -15,9 +28,8 @@ jobs:
     
     strategy:
       matrix:
-        repo:
-          - "alexauron/astro-tutorial"
-          - "alexauron/Head-First-Design-Patterns"
+        repo: ${{ fromJSON(format('["{0}"]', replace(github.event.inputs.repo_list, '\n', '", "'))) }}
+
 
     steps:
       - name: Get today
@@ -92,12 +104,15 @@ jobs:
           ${{ steps.codeql.outputs.alerts }}
           EOF
           )
+          
+          assignee_string=$(echo "${{ github.event.inputs.assignees }}" | tr '\n' ',')
 
           gh issue create \
             --repo ${{ matrix.repo }} \
             --title "[tech-debt] ${{ matrix.repo }} - ${{ steps.date.outputs.today }}" \
             --body "$body" \
             --label "bug" \
-            --milestone "1.0.0"
+            --milestone "1.0.0" \
+            --assignee "${assignee_string}"
         env:
           GH_TOKEN: ${{ secrets.PAT }}
