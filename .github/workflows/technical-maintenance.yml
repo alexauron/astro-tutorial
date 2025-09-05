@@ -49,7 +49,7 @@ jobs:
       - name: Fetch CodeQL vulnerabilities
         id: codeql
         run: |
-          gh api repos/${{ github.repository }}/code-scanning/alerts --paginate -q '.[]
+          gh api repos/${{ github.repository }}/code-scanning/alerts --paginate -q '.[]'
           
           critical_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
             --paginate -q '.[] | select(.rule.severity=="critical") | "- [ ] " + .html_url')
