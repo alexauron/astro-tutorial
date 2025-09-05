@@ -1,0 +1,25 @@
+# .github/workflows/vulnerable.yml
+name: Vulnerable CI
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        # ⚠️ VULNERABLE: Esto es inseguro y susceptible a ataques de cadena de suministro.
+        # No se usa un SHA específico para la acción, lo que permite que un atacante
+        # modifique el código en la rama 'main' para inyectar código malicioso.
+        uses: actions/checkout@main
+
+      - name: Run a vulnerable command
+        id: run-command
+        # ⚠️ VULNERABLE: Esta acción es vulnerable a la inyección de comandos.
+        # Usa el título del commit directamente, sin sanitizar, para ejecutar un comando.
+        # Un atacante podría incluir comandos maliciosos en el título de su commit.
+        run: echo "Processing commit: ${{ github.event.head_commit.message }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
