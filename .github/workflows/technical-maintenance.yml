@@ -36,11 +36,16 @@ jobs:
       issues: write
       security-events: read
     
-    strategy:
-      matrix: ${{ fromJSON(needs.init.outputs.repos) }}
+    # strategy:
+      # matrix: ${{ fromJSON(needs.init.outputs.repos) }}
 
 
     steps:
+      - name: Print received repos output
+        run: |
+          echo "Output received from 'init' job:"
+          echo "${{ needs.init.outputs.repos }}"
+  
       - name: Get today
         id: date
         run: echo "today=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
