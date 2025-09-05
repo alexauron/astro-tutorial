@@ -16,6 +16,17 @@ on:
         default: alexauron
 
 jobs:
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      repo_matrix: ${{ steps.prepare.outputs.repos }}
+    steps:
+      - name: Prepare repo matrix
+        id: prepare
+        run: |
+          repos=$(echo "${{ github.event.inputs.repo_list }}" | sed 's/^/"/; s/$/"/; s/\n/","/g')
+          echo "repos={\"repo\": [${repos}]}" >> $GITHUB_OUTPUT
+          
   create-vulnerability-issues:
     runs-on: ubuntu-latest
     permissions:
@@ -24,8 +35,8 @@ jobs:
       security-events: read
     
     strategy:
-      matrix:
-        repo: ${{ split(github.event.inputs.repo_list, ',') }}
+      matrix: ${{ fromJSON(needs.prepare-matrix.outputs.repo_matrix) }}
+
 
     steps:
       - name: Get today
