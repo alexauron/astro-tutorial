@@ -1,20 +1,44 @@
 ---
+import { execSync } from 'child_process';
 
+// ⚠️ VULNERABLE: Este es un endpoint de servidor susceptible a Command Injection.
+// La entrada del formulario no se valida antes de ser usada para ejecutar un comando.
+export const POST = async ({ request }: { request: any }) => {
+  const data = await request.formData();
+  const filename = data.get('filename');
+
+  try {
+    const result = execSync(`echo 'Hello, Astro!' > ${filename}`);
+    return new Response(`File ${filename} created successfully!`, { status: 200 });
+  } catch (error) {
+    return new Response('Error creating file', { status: 500 });
+  }
+};
+
+const url = new URL(Astro.request.url);
+const name = url.searchParams.get('name') || 'invitado';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<a href="/">Inicio</a>
-		<a href="/about/">Sobre mi</a>
-		<a href="/blog/">Blog</a>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	<meta name="viewport" content="width=device-width" />
+	<meta name="generator" content={Astro.generator} />
+	<title>Astro Demo con Vulnerabilidades</title>
+</head>
+<body>
+	<h1>Hola, {name}!</h1>
 
-		<h1>Mi sitio Astro</h1>
-	</body>
+	<p>Entrada insegura: <span set:html={name} /></p>
+
+	<hr>
+
+	<h2>Test de Inyección de Comandos</h2>
+	<form method="POST">
+		<label for="filename">Nombre del archivo a crear:</label>
+		<input type="text" id="filename" name="filename" required>
+		<button type="submit">Crear archivo</button>
+	</form>
+</body>
 </html>
