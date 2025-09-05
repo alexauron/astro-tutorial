@@ -19,34 +19,28 @@ jobs:
   init:
     runs-on: ubuntu-latest
     outputs:
-      repos: ${{ steps.generate-matrix.outputs.repos }}
+      repos: ${{ steps.generate-matrix.outputs.repo_array }}
     steps:
       - name: generate-matrix
         id: generate-matrix
-        run: |
-          repos_json=$(echo '"${{ inputs.repos }}"' | jq -c '. | split(",") | map(select(length > 0))')
-          echo "$repos_json"
-          echo "repos<<EOF" >> $GITHUB_OUTPUT
-          echo "$repos_json" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        run: |  
+          echo "${{ inputs.repos }}" | jq -c 'split(",") | map(select(length > 0))' > repos.json          
+          echo "repo_array=$(cat repos.json)" >> $GITHUB_OUTPUT
           
   create-vulnerability-issues:
     runs-on: ubuntu-latest
+    needs: init
     permissions:
       contents: read
       issues: write
       security-events: read
     
-    # strategy:
-      # matrix: ${{ fromJSON(needs.init.outputs.repos) }}
+    strategy:
+      matrix: 
+        repo: ${{ fromJSON(needs.init.outputs.repos) }}
 
 
     steps:
-      - name: Print received repos output
-        run: |
-          echo "Output received from 'init' job:"
-          echo "${{ needs.init.outputs.repos }}"
-  
       - name: Get today
         id: date
         run: echo "today=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
