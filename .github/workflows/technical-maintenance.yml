@@ -70,6 +70,6 @@ jobs:
             --title "Weekly task - ${{ github.repository }} - ${{ steps.date.outputs.today }}" \
             --body "$body" \
             --label "bug" \
-            --milestone 1
+            --milestone "1.0.0"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
