@@ -4,31 +4,10 @@ on:
   # schedule:
     # - cron: "0 9 * * 1"
   workflow_dispatch:
-    inputs:
-      repos:
-        description: 'Repositories (comma separated)'
-        required: true
-        default: alexauron/astro-tutorial,alexauron/Head-First-Design-Patterns
-
-      assignees:
-        description: 'Assignees (comma separated)'
-        required: false
-        default: alexauron
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    outputs:
-      repos: ${{ steps.generate-matrix.outputs.repos }}
-    steps:
-      - name: generate-matrix
-        id: generate-matrix
-        run: |
-          echo "repos=$(echo "${{ inputs.repos }}" | jq -c 'split(",") | map(select(length > 0))')" >> $GITHUB_OUTPUT
-          
   create-vulnerability-issues:
     runs-on: ubuntu-latest
-    needs: init
     permissions:
       contents: read
       issues: write
@@ -36,8 +15,9 @@ jobs:
     
     strategy:
       matrix: 
-        repo: ${{ fromJSON(needs.init.outputs.repos) }}
-
+        repo: 
+           - alexauron/astro-tutorial
+           - alexauron/Head-First-Design-Patterns
 
     steps:
       - name: Get today
@@ -119,6 +99,6 @@ jobs:
             --body "$body" \
             --label "bug" \
             --milestone "1.0.0" \
-            --assignee "${{ github.event.inputs.assignees }}"
+            --assignee "alexauron"
         env:
           GH_TOKEN: ${{ secrets.PAT }}
