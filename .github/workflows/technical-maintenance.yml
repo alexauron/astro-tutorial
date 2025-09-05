@@ -21,7 +21,7 @@ jobs:
         id: dependabot
         run: |
           alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts -f severity=critical -f severity=high \
-            --paginate -q '.[] | "- [" + .dependency.package.name + " (" + .dependency.severity + ")](" + .html_url + ")"')
+            --method GET --paginate -q '.[] | "- [" + .dependency.package.name + " (" + .dependency.severity + ")](" + .html_url + ")"')
           if [ -z "$alerts" ]; then
             echo "alerts=✅ None found" >> $GITHUB_OUTPUT
           else
@@ -38,7 +38,7 @@ jobs:
         id: codeql
         run: |
           alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts --f severity=critical -f severity=high \
-            --paginate -q '.[] | "- [" + .rule.id + " (" + .rule.severity + ")](" + .html_url + ")"')
+            --method GET --paginate -q '.[] | "- [" + .rule.id + " (" + .rule.severity + ")](" + .html_url + ")"')
           if [ -z "$alerts" ]; then
             echo "alerts=✅ None found" >> $GITHUB_OUTPUT
           else
