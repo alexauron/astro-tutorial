@@ -19,7 +19,7 @@ jobs:
   init:
     runs-on: ubuntu-latest
     outputs:
-      repos: ${{ steps.generate-matrix.outputs.products }}
+      repos: ${{ steps.generate-matrix.outputs.repos }}
     steps:
       - name: generate-matrix
         id: generate-matrix
