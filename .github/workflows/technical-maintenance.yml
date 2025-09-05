@@ -50,7 +50,7 @@ jobs:
         id: codeql
         run: |
           critical_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
-            --paginate -q '.[] | select(.rule.severity=="critical") | "- [ ] " + .html_url')
+            --paginate -q '.[] | "- [ ] " + .html_url')
 
           high_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
             --paginate -q '.[] | select(.rule.severity=="high") | "- [ ] " + .html_url')
