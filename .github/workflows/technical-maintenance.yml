@@ -13,12 +13,24 @@ jobs:
       issues: write
       security-events: read
     steps:
+      - name: Get today
+        id: date
+        run: echo "today=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
       - name: Fetch Dependabot vulnerabilities
         id: dependabot
         run: |
           alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
             --paginate -q '.[] | select(.security_severity_level=="high" or .security_severity_level=="critical") | "- [" + .dependency.package.name + " (" + .security_severity_level + ")](" + .html_url + ")"')
-          echo "alerts=${alerts}" >> $GITHUB_OUTPUT
+          if [ -z "$alerts" ]; then
+            echo "alerts=✅ None found" >> $GITHUB_OUTPUT
+          else
+            {
+              echo "alerts<<EOF"
+              echo "$alerts"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          fi
         env:
           GH_TOKEN: ${{ secrets.PAT }}
 
@@ -27,7 +39,15 @@ jobs:
         run: |
           alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
             --paginate -q '.[] | select(.rule.severity=="high" or .rule.severity=="critical") | "- [" + .rule.id + " (" + .rule.severity + ")](" + .html_url + ")"')
-          echo "alerts=${alerts}" >> $GITHUB_OUTPUT
+          if [ -z "$alerts" ]; then
+            echo "alerts=✅ None found" >> $GITHUB_OUTPUT
+          else
+            {
+              echo "alerts<<EOF"
+              echo "$alerts"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          fi
         env:
           GH_TOKEN: ${{ secrets.PAT }}
 
@@ -35,23 +55,21 @@ jobs:
         run: |
           body=$(cat <<EOF
           Weekly issue for **${{ github.repository }}**  
-          Date: `${{ github.run_started_at }}`
+          Date: `${{ steps.date.outputs.today }}`
 
           ### 🔒 Dependabot vulnerabilities (High/Critical)
-          ${DEPENDABOT_ALERTS:-✅ None found}
+          ${{ steps.dependabot.outputs.alerts }}
 
           ### 🔒 CodeQL vulnerabilities (High/Critical)
-          ${CODEQL_ALERTS:-✅ None found}
+          ${{ steps.codeql.outputs.alerts }}
           EOF
           )
 
           gh issue create \
             --repo ${{ github.repository }} \
-            --title "Weekly task - ${{ github.repository }} - ${{ github.run_started_at }}" \
+            --title "Weekly task - ${{ github.repository }} - ${{ steps.date.outputs.today }}" \
             --body "$body" \
-            --label "dependencies" \
-            --milestone "1.0.0"
+            --label "weekly,security,automated" \
+            --milestone 1
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
-          DEPENDABOT_ALERTS: ${{ steps.dependabot.outputs.alerts }}
-          CODEQL_ALERTS: ${{ steps.codeql.outputs.alerts }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
