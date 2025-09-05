@@ -32,21 +32,26 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create weekly issue
-        uses: peter-evans/create-issue@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "Weekly task - ${{ github.repository }} - ${{ github.run_started_at }}"
-          body: |
-            Weekly issue for **${{ github.repository }}**  
-            Date: `${{ github.run_started_at }}`
+        run: |
+          body=$(cat <<EOF
+          Weekly issue for **${{ github.repository }}**  
+          Date: `${{ github.run_started_at }}`
 
-            ### 🔒 Dependabot vulnerabilities (High/Critical)
-            ${{ steps.dependabot.outputs.alerts || '✅ None found' }}
+          ### 🔒 Dependabot vulnerabilities (High/Critical)
+          ${DEPENDABOT_ALERTS:-✅ None found}
 
-            ### 🔒 CodeQL vulnerabilities (High/Critical)
-            ${{ steps.codeql.outputs.alerts || '✅ None found' }}
-          labels: |
-            weekly
-            security
-            automated
-          milestone: 1
+          ### 🔒 CodeQL vulnerabilities (High/Critical)
+          ${CODEQL_ALERTS:-✅ None found}
+          EOF
+          )
+
+          gh issue create \
+            --repo ${{ github.repository }} \
+            --title "Weekly task - ${{ github.repository }} - ${{ github.run_started_at }}" \
+            --body "$body" \
+            --label "weekly,security,automated" \
+            --milestone 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPENDABOT_ALERTS: ${{ steps.dependabot.outputs.alerts }}
+          CODEQL_ALERTS: ${{ steps.codeql.outputs.alerts }}
