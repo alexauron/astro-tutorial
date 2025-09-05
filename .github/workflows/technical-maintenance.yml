@@ -21,10 +21,10 @@ jobs:
         id: dependabot
         run: |
           critical_alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
-            --paginate -q '.[] | select(.security_vulnerability.severity=="critical") | "- [ ] " + .html_url')
+            --paginate -q '.[] | select(.security_vulnerability.severity=="critical" and .state=="open") | "- [ ] " + .html_url')
           
           high_alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
-            --paginate -q '.[] | select(.security_vulnerability.severity=="high") | "- [ ] " + .html_url')
+            --paginate -q '.[] | select(.security_vulnerability.severity=="high" and .state=="open") | "- [ ] " + .html_url')
 
           {
             echo "alerts<<EOF"
@@ -49,13 +49,11 @@ jobs:
       - name: Fetch CodeQL vulnerabilities
         id: codeql
         run: |
-          gh api repos/${{ github.repository }}/code-scanning/alerts --paginate -q '.[]'
-          
           critical_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
-            --paginate -q '.[] | select(.rule.severity=="critical") | "- [ ] " + .html_url')
+            --paginate -q '.[] | select(.rule.security_severity_level=="critical" and .state=="open") | "- [ ] " + .html_url')
 
           high_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
-            --paginate -q '.[] | select(.rule.severity=="high") | "- [ ] " + .html_url')
+            --paginate -q '.[] | select(.rule.security_severity_level=="high" and .state=="open") | "- [ ] " + .html_url')
           
           {
             echo "alerts<<EOF"
