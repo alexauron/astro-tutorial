@@ -5,10 +5,10 @@ on:
     # - cron: "0 9 * * 1"
   workflow_dispatch:
     inputs:
-      repo_list:
+      repos:
         description: 'Repositories (comma separated)'
         required: true
-        default: alexauron/astro-tutorial,alexauron/Head-First-Design-Patterns
+        default: alexauron/astro-tutorial alexauron/Head-First-Design-Patterns
 
       assignees:
         description: 'Assignees (comma separated)'
@@ -16,16 +16,16 @@ on:
         default: alexauron
 
 jobs:
-  prepare-matrix:
+  init:
     runs-on: ubuntu-latest
     outputs:
-      repo_matrix: ${{ steps.prepare.outputs.repos }}
+      repos: ${{ steps.generate-matrix.outputs.products }}
     steps:
-      - name: Prepare repo matrix
-        id: prepare
+      - name: generate-matrix
+        id: generate-matrix
         run: |
-          repos=$(echo "${{ github.event.inputs.repo_list }}" | sed 's/^/"/; s/$/"/; s/\n/","/g')
-          echo "repos={\"repo\": [${repos}]}" >> $GITHUB_OUTPUT
+          repos=$(echo '"${{ inputs.repos }}"' | jq -c '. | split(",") | map(select(length > 0))')
+          echo "repos=$repos" >> $GITHUB_OUTPUT
           
   create-vulnerability-issues:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
       security-events: read
     
     strategy:
-      matrix: ${{ fromJSON(needs.prepare-matrix.outputs.repo_matrix) }}
+      matrix: ${{ fromJSON(needs.prepare-matrix.outputs.repos) }}
 
 
     steps:
