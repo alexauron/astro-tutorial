@@ -21,10 +21,10 @@ jobs:
         id: dependabot
         run: |
           critical_alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
-            --paginate -q '.[] | select(.security_vulnerability.severity=="critical") | "- [] " + .html_url')
+            --paginate -q '.[] | select(.security_vulnerability.severity=="critical") | "- [ ] " + .html_url')
           
           high_alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
-            --paginate -q '.[] | select(.security_vulnerability.severity=="high") | "- [] " + .html_url')
+            --paginate -q '.[] | select(.security_vulnerability.severity=="high") | "- [ ] " + .html_url')
 
           {
             echo "alerts<<EOF"
@@ -50,10 +50,10 @@ jobs:
         id: codeql
         run: |
           critical_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
-            --paginate -q '.[] | select(.rule.severity=="critical") | "- [] " + .html_url')
+            --paginate -q '.[] | select(.rule.severity=="critical") | "- [ ] " + .html_url')
 
           high_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
-            --paginate -q '.[] | select(.rule.severity=="high") | "- [] " + .html_url')
+            --paginate -q '.[] | select(.rule.severity=="high") | "- [ ] " + .html_url')
           
           {
             echo "alerts<<EOF"
