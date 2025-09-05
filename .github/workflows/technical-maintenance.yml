@@ -25,7 +25,7 @@ jobs:
     
     strategy:
       matrix:
-        repo: ${{ fromJSON(format('["{0}"]', replace(github.event.inputs.repo_list, ',', '","'))) }}
+        repo: ${{ split(github.event.inputs.repo_list, ',') }}
 
     steps:
       - name: Get today
