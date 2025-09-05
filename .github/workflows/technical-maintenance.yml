@@ -49,8 +49,8 @@ jobs:
             --repo ${{ github.repository }} \
             --title "Weekly task - ${{ github.repository }} - ${{ github.run_started_at }}" \
             --body "$body" \
-            --label "weekly,security,automated" \
-            --milestone 1
+            --label "dependencies" \
+            --milestone "1.0.0"
         env:
           GH_TOKEN: ${{ secrets.PAT }}
           DEPENDABOT_ALERTS: ${{ steps.dependabot.outputs.alerts }}
