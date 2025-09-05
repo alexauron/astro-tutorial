@@ -8,7 +8,7 @@ on:
       repos:
         description: 'Repositories (comma separated)'
         required: true
-        default: alexauron/astro-tutorial alexauron/Head-First-Design-Patterns
+        default: alexauron/astro-tutorial,alexauron/Head-First-Design-Patterns
 
       assignees:
         description: 'Assignees (comma separated)'
@@ -35,7 +35,7 @@ jobs:
       security-events: read
     
     strategy:
-      matrix: ${{ fromJSON(needs.prepare-matrix.outputs.repos) }}
+      matrix: ${{ fromJSON(needs.init.outputs.repos) }}
 
 
     steps:
