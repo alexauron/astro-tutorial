@@ -20,46 +20,68 @@ jobs:
       - name: Fetch Dependabot vulnerabilities
         id: dependabot
         run: |
-          alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
-            --paginate --jq '.[] | select(.security_vulnerability.severity=="high" or .security_vulnerability.severity=="critical") | 
-            " - <span style=\"background-color:" + (if .security_vulnerability.severity == "critical" then "red" else "orange" end) + ";color:white;padding:2px 6px;border-radius:10px;font-weight:bold;\">" + .security_vulnerability.severity + "</span> " + .html_url')
-          if [ -z "$alerts" ]; then
-            echo "alerts=✅ None found" >> $GITHUB_OUTPUT
-          else
-            {
-              echo "alerts<<EOF"
-              echo "$alerts"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
-          fi
+          critical_alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
+            --paginate -q '.[] | select(.security_vulnerability.severity=="critical") | "- [] " + .html_url')
+          
+          high_alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
+            --paginate -q '.[] | select(.security_vulnerability.severity=="high") | "- [] " + .html_url')
+
+          {
+            echo "alerts<<EOF"
+            echo "### 🔴 Critical"
+            if [ -z "$critical_alerts" ]; then
+              echo "✅ None found"
+            else
+              echo "$critical_alerts"
+            fi
+            echo ""
+            echo "### 🟠 High"
+            if [ -z "$high_alerts" ]; then
+              echo "✅ None found"
+            else
+              echo "$high_alerts"
+            fi
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.PAT }}
 
       - name: Fetch CodeQL vulnerabilities
         id: codeql
         run: |
-          alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
-            --paginate --jq '.[] | select(.rule.severity=="high" or .rule.severity=="critical") | 
-            " - <span style=\"background-color:" + (if .rule.severity == "critical" then "red" else "orange" end) + ";color:white;padding:2px 6px;border-radius:10px;font-weight:bold;\">" + .rule.severity + "</span> " + .html_url')
-          if [ -z "$alerts" ]; then
-            echo "alerts=✅ None found" >> $GITHUB_OUTPUT
-          else
-            {
-              echo "alerts<<EOF"
-              echo "$alerts"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
-          fi
+          critical_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
+            --paginate -q '.[] | select(.rule.severity=="critical") | "- [] " + .html_url')
+
+          high_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
+            --paginate -q '.[] | select(.rule.severity=="high") | "- [] " + .html_url')
+          
+          {
+            echo "alerts<<EOF"
+            echo "### 🔴 Critical"
+            if [ -z "$critical_alerts" ]; then
+              echo "✅ None found"
+            else
+              echo "$critical_alerts"
+            fi
+            echo ""
+            echo "### 🟠 High"
+            if [ -z "$high_alerts" ]; then
+              echo "✅ None found"
+            else
+              echo "$high_alerts"
+            fi
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.PAT }}
 
       - name: Create weekly issue
         run: |
           body=$(cat <<EOF
-          ### 🔒 Dependabot vulnerabilities (High/Critical)
+          ### 🤖 Dependabot vulnerabilities
           ${{ steps.dependabot.outputs.alerts }}
 
-          ### 🔒 CodeQL vulnerabilities (High/Critical)
+          ### 🔒 CodeQL vulnerabilities
           ${{ steps.codeql.outputs.alerts }}
           EOF
           )
