@@ -17,7 +17,7 @@ jobs:
       matrix:
         repo:
           - "alexauron/astro-tutorial"
-          - "alexauron/hidaiapp"
+          - "alexauron/Head-First-Design-Patterns"
 
     steps:
       - name: Get today
