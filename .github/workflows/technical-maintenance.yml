@@ -20,8 +20,8 @@ jobs:
       - name: Fetch Dependabot vulnerabilities
         id: dependabot
         run: |
-          alerts=$(gh api -X GET repos/${{ github.repository }}/dependabot/alerts -f q='is:open severity:critical,high' \
-            --paginate -q '.[] | "[" + .security_vulnerability.severity + "] " + .html_url + ""')
+          alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
+            --paginate -q '.[] | select(.security_vulnerability.severity=="high" or .security_vulnerability.severity=="critical") | "[" + .security_vulnerability.severity + "] " + .html_url + ""')
           if [ -z "$alerts" ]; then
             echo "alerts=✅ None found" >> $GITHUB_OUTPUT
           else
@@ -37,8 +37,8 @@ jobs:
       - name: Fetch CodeQL vulnerabilities
         id: codeql
         run: |
-          alerts=$(gh api -X GET repos/${{ github.repository }}/code-scanning/alerts -f q='is:open severity:critical,high' \
-            --paginate -q '.[] | .html_url')
+          alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
+            --paginate -q '.[] | select(.rule.severity=="high" or .rule.severity=="critical") | .html_url')
           if [ -z "$alerts" ]; then
             echo "alerts=✅ None found" >> $GITHUB_OUTPUT
           else
