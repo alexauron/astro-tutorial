@@ -24,9 +24,10 @@ jobs:
       - name: generate-matrix
         id: generate-matrix
         run: |
-          repos=$(echo '"${{ inputs.repos }}"' | jq -c '. | split(",") | map(select(length > 0))')
-          echo "$repos"
-          echo "repos=$repos" >> $GITHUB_OUTPUT
+          repos_array=$(echo '"${{ inputs.repos }}"' | jq -c '. | split(",") | map(select(length > 0))')
+          echo "repos<<EOF" >> $GITHUB_OUTPUT
+          echo "$repos_array" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           
   create-vulnerability-issues:
     runs-on: ubuntu-latest
