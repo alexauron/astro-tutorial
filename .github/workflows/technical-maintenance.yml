@@ -1,0 +1,52 @@
+name: Weekly issue with vulnerabilities
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  create-weekly-issue:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      security-events: read
+    steps:
+      - name: Fetch Dependabot vulnerabilities
+        id: dependabot
+        run: |
+          alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
+            --paginate -q '.[] | select(.security_severity_level=="high" or .security_severity_level=="critical") | "- [" + .dependency.package.name + " (" + .security_severity_level + ")](" + .html_url + ")"')
+          echo "alerts=${alerts}" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch CodeQL vulnerabilities
+        id: codeql
+        run: |
+          alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
+            --paginate -q '.[] | select(.rule.severity=="high" or .rule.severity=="critical") | "- [" + .rule.id + " (" + .rule.severity + ")](" + .html_url + ")"')
+          echo "alerts=${alerts}" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create weekly issue
+        uses: peter-evans/create-issue@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Weekly task - ${{ github.repository }} - ${{ github.run_started_at }}"
+          body: |
+            Weekly issue for **${{ github.repository }}**  
+            Date: `${{ github.run_started_at }}`
+
+            ### 🔒 Dependabot vulnerabilities (High/Critical)
+            ${{ steps.dependabot.outputs.alerts || '✅ None found' }}
+
+            ### 🔒 CodeQL vulnerabilities (High/Critical)
+            ${{ steps.codeql.outputs.alerts || '✅ None found' }}
+          labels: |
+            weekly
+            security
+            automated
+          milestone: 1
