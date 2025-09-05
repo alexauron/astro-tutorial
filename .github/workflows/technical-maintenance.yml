@@ -19,13 +19,12 @@ jobs:
   init:
     runs-on: ubuntu-latest
     outputs:
-      repos: ${{ steps.generate-matrix.outputs.repo_array }}
+      repos: ${{ steps.generate-matrix.outputs.repos }}
     steps:
       - name: generate-matrix
         id: generate-matrix
-        run: |  
-          repos=$(echo "${{ inputs.repos }}" | jq -c 'split(",") | map(select(length > 0))')
-          echo "repo_array=$repos" >> $GITHUB_OUTPUT
+        run: |
+          echo "repos=$(echo "${{ inputs.repos }}" | jq -c 'split(",") | map(select(length > 0))')" >> $GITHUB_OUTPUT
           
   create-vulnerability-issues:
     runs-on: ubuntu-latest
