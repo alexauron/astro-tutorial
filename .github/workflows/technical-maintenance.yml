@@ -50,6 +50,12 @@ jobs:
             fi
             echo "EOF"
           } >> $GITHUB_OUTPUT
+
+          if [ -n "$critical_alerts" ] || [ -n "$high_alerts" ]; then
+            echo "found_alerts=true" >> $GITHUB_OUTPUT
+          else
+            echo "found_alerts=false" >> $GITHUB_OUTPUT
+          fi
         env:
           GH_TOKEN: ${{ secrets.PAT }}
 
@@ -79,10 +85,17 @@ jobs:
             fi
             echo "EOF"
           } >> $GITHUB_OUTPUT
+          
+          if [ -n "$critical_alerts" ] || [ -n "$high_alerts" ]; then
+            echo "found_alerts=true" >> $GITHUB_OUTPUT
+          else
+            echo "found_alerts=false" >> $GITHUB_OUTPUT
+          fi
         env:
           GH_TOKEN: ${{ secrets.PAT }}
 
       - name: Create weekly issue for ${{ matrix.repo }}
+        if: steps.dependabot.outputs.found_alerts == 'true' || steps.codeql.outputs.found_alerts == 'true'
         run: |
           body=$(cat <<EOF
           ### 🤖 Dependabot vulnerabilities
