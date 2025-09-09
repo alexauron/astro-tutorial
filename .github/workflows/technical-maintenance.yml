@@ -22,7 +22,13 @@ jobs:
     steps:
       - name: Get today
         id: date
-        run: echo "today=$(date -u +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+        run: |
+          month_year=$(date +'%B %Y')
+          week_of_year=$(date +'%W')
+          first_day_of_month_week=$(date -d "$(date +'%Y-%m-01')" +'%W')
+          week_of_month=$((week_of_year - first_day_of_month_week + 1))
+          
+          echo "today=${month_year} week ${week_of_month}" >> $GITHUB_OUTPUT
         
       - name: Fetch Dependabot vulnerabilities for ${{ matrix.repo }}
         id: dependabot
