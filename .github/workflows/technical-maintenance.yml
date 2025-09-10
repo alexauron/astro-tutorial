@@ -2,7 +2,7 @@ name: Weekly issue with vulnerabilities
 
 on:
   # schedule:
-    # - cron: "0 9 * * 1"
+  # - cron: "0 9 * * 1"
   workflow_dispatch:
 
 jobs:
@@ -14,10 +14,10 @@ jobs:
       security-events: read
     
     strategy:
-      matrix: 
-        repo: 
-           - alexauron/astro-tutorial
-           - alexauron/Head-First-Design-Patterns
+      matrix:  
+        repo:  
+          - alexauron/astro-tutorial
+          - alexauron/Head-First-Design-Patterns
 
     steps:
       - name: Get today
@@ -29,6 +29,11 @@ jobs:
           week_of_month=$((week_of_year - first_day_of_month_week + 1))
           
           echo "today=${month_year} week ${week_of_month}" >> $GITHUB_OUTPUT
+          
+          # Nuevo: Guardar el mes y el año para el hito
+          milestone_month=$(date +'%m')
+          milestone_year=$(date +'%y')
+          echo "milestone=XXX-MTO${milestone_month}${milestone_year}" >> $GITHUB_OUTPUT
         
       - name: Fetch Dependabot vulnerabilities for ${{ matrix.repo }}
         id: dependabot
@@ -41,6 +46,7 @@ jobs:
 
           {
             echo "alerts<<EOF"
+            echo "### 🤖 Dependabot vulnerabilities"
             echo "### 🔴 Critical"
             if [ -z "$critical_alerts" ]; then
               echo "✅ None found"
@@ -76,6 +82,7 @@ jobs:
           
           {
             echo "alerts<<EOF"
+            echo "### 🔒 CodeQL vulnerabilities"
             echo "### 🔴 Critical"
             if [ -z "$critical_alerts" ]; then
               echo "✅ None found"
@@ -91,7 +98,7 @@ jobs:
             fi
             echo "EOF"
           } >> $GITHUB_OUTPUT
-          
+
           if [ -n "$critical_alerts" ] || [ -n "$high_alerts" ]; then
             echo "found_alerts=true" >> $GITHUB_OUTPUT
           else
@@ -104,10 +111,8 @@ jobs:
         if: steps.dependabot.outputs.found_alerts == 'true' || steps.codeql.outputs.found_alerts == 'true'
         run: |
           body=$(cat <<EOF
-          ### 🤖 Dependabot vulnerabilities
           ${{ steps.dependabot.outputs.alerts }}
-
-          ### 🔒 CodeQL vulnerabilities
+          
           ${{ steps.codeql.outputs.alerts }}
           EOF
           )
@@ -117,7 +122,7 @@ jobs:
             --title "[tech-debt] ${{ matrix.repo }} - ${{ steps.date.outputs.today }}" \
             --body "$body" \
             --label "bug" \
-            --milestone "1.0.0" \
+            --milestone "${{ steps.date.outputs.milestone }}" \
             --assignee "alexauron"
         env:
           GH_TOKEN: ${{ secrets.PAT }}
